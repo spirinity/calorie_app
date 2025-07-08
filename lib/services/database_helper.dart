@@ -19,10 +19,12 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    // The version is now 2. This is correct.
+    return await openDatabase(path, version: 2, onCreate: _createDB, onUpgrade: _upgradeDB);
   }
 
   Future _createDB(Database db, int version) async {
+    // This creates the tables from scratch with the new column
     await db.execute('''
       CREATE TABLE user_profile (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -50,17 +52,23 @@ class DatabaseHelper {
     ''');
   }
 
+  // This handles upgrading from an old version
+  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE user_profile ADD COLUMN profileImagePath TEXT');
+    }
+  }
+
   // User Profile CRUD
   Future<void> saveUserProfile(UserProfile profile) async {
     final db = await instance.database;
-    await db.delete('user_profile'); // Clear existing profile
+    await db.delete('user_profile');
     await db.insert('user_profile', profile.toJson());
   }
 
   Future<UserProfile?> getUserProfile() async {
     final db = await instance.database;
     final maps = await db.query('user_profile');
-
     if (maps.isNotEmpty) {
       return UserProfile.fromJson(maps.first);
     } else {
@@ -97,4 +105,20 @@ class DatabaseHelper {
 
     return result.map((json) => FoodEntry.fromJson(json)).toList();
   }
+
+  Future<List<FoodEntry>> getEntriesForMonth(DateTime month) async {
+    final db = await instance.database;
+    final startOfMonth = DateTime(month.year, month.month, 1).millisecondsSinceEpoch;
+    final endOfMonth = DateTime(month.year, month.month + 1, 0, 23, 59, 59).millisecondsSinceEpoch;
+
+    final result = await db.query(
+      'food_entries',
+      where: 'timestamp >= ? AND timestamp <= ?',
+      whereArgs: [startOfMonth, endOfMonth],
+      orderBy: 'timestamp DESC',
+    );
+
+    return result.map((json) => FoodEntry.fromJson(json)).toList();
+  }
+
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
-import 'add_food_screen.dart';
 import 'profile_screen.dart';
+import 'calendar_screen.dart'; // Import the new screen
 
 class MainNavigationScreen extends StatefulWidget {
   @override
@@ -47,45 +47,32 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         },
         children: [
           HomeScreen(onRefreshNeeded: () {
-            // Callback to refresh home screen when needed
             setState(() {});
           }),
+          CalendarScreen(), // Add the CalendarScreen
           ProfileScreen(),
         ],
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: Offset(0, -2),
-            ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: _onItemTapped,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          selectedItemColor: Theme.of(context).primaryColor,
-          unselectedItemColor: Colors.grey[600],
-          selectedFontSize: 12,
-          unselectedFontSize: 12,
-          elevation: 0,
-          items: [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person),
-              label: 'Profile',
-            ),
-          ],
-        ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: _onItemTapped,
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_today_outlined),
+            activeIcon: Icon(Icons.calendar_today),
+            label: 'Calendar',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }

@@ -24,4 +24,8 @@ class FoodService {
     await DatabaseHelper.instance.deleteFoodEntry(id);
   }
 
+    static Future<List<FoodEntry>> getEntriesForMonth(DateTime month) async {
+    return await DatabaseHelper.instance.getEntriesForMonth(month);
+  }
+
 }
