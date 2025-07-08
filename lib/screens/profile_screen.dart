@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/user_profile.dart';
 import '../services/user_service.dart';
 import 'profile_setup_screen.dart';
@@ -10,6 +12,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   UserProfile? userProfile;
+  final ImagePicker _picker = ImagePicker();
   Map<String, dynamic> healthStats = {};
   bool isLoading = true;
 
@@ -21,15 +24,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadUserData() async {
     setState(() => isLoading = true);
-    
+
     final profile = await UserService.getUserProfile();
     final stats = await UserService.getHealthStats();
-    
+
     setState(() {
       userProfile = profile;
       healthStats = stats;
       isLoading = false;
     });
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final pickedFile = await _picker.pickImage(source: source, imageQuality: 50);
+
+    if (pickedFile != null && userProfile != null) {
+      final updatedProfile =
+          userProfile!.copyWith(profileImagePath: pickedFile.path);
+      await UserService.saveUserProfile(updatedProfile);
+      _loadUserData();
+    }
   }
 
   @override
@@ -68,8 +82,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Text(
             'Welcome to Calorie Tracker!',
             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-              color: Theme.of(context).primaryColor,
-            ),
+                  color: Theme.of(context).primaryColor,
+                ),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 16),
@@ -113,24 +127,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           // Profile header
           _buildProfileHeader(),
-          
+
           SizedBox(height: 24),
-          
+
           // Health stats
           _buildHealthStatsSection(),
-          
+
           SizedBox(height: 24),
-          
+
           // Calorie goal section
           _buildCalorieGoalSection(),
-          
+
           SizedBox(height: 24),
-          
+
           // Personal information
           _buildPersonalInfoSection(),
-          
+
           SizedBox(height: 24),
-          
+
           // Action buttons
           _buildActionButtons(),
         ],
@@ -144,13 +158,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: EdgeInsets.all(20),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 40,
-              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-              child: Icon(
-                Icons.person,
-                size: 40,
-                color: Theme.of(context).primaryColor,
+            GestureDetector(
+              onTap: () => _pickImage(ImageSource.gallery),
+              child: CircleAvatar(
+                radius: 40,
+                backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                backgroundImage: userProfile?.profileImagePath != null
+                    ? FileImage(File(userProfile!.profileImagePath!))
+                    : null,
+                child: userProfile?.profileImagePath == null
+                    ? Icon(
+                        Icons.person,
+                        size: 40,
+                        color: Theme.of(context).primaryColor,
+                      )
+                    : null,
               ),
             ),
             SizedBox(width: 16),
@@ -161,23 +183,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text(
                     userProfile!.name.isNotEmpty ? userProfile!.name : 'User',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   SizedBox(height: 4),
                   Text(
                     '${userProfile!.age} years old • ${userProfile!.gender.toUpperCase()}',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                          color: Colors.grey[600],
+                        ),
                   ),
                   SizedBox(height: 4),
                   Text(
                     UserService.getGoalDescription(userProfile!.goal),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).primaryColor,
-                      fontWeight: FontWeight.w500,
-                    ),
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.w500,
+                        ),
                   ),
                 ],
               ),
@@ -195,8 +217,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Text(
           'Health Stats',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+                fontWeight: FontWeight.bold,
+              ),
         ),
         SizedBox(height: 12),
         Row(
@@ -250,7 +272,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, String subtitle, IconData icon, Color color) {
+  Widget _buildStatCard(
+      String title, String value, String subtitle, IconData icon, Color color) {
     return Card(
       child: Padding(
         padding: EdgeInsets.all(16),
@@ -264,8 +287,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text(
                   title,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
               ],
             ),
@@ -273,15 +296,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Text(
               value,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
-              ),
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             Text(
               subtitle,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
-              ),
+                    color: Colors.grey[600],
+                  ),
             ),
           ],
         ),
@@ -311,52 +334,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text(
                   'Daily Calorie Goal',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               ],
             ),
             SizedBox(height: 16),
-            
             RichText(
               text: TextSpan(
                 children: [
                   TextSpan(
                     text: '$currentGoal',
                     style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      color: Theme.of(context).primaryColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 36,
-                    ),
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 36,
+                        ),
                   ),
                   TextSpan(
                     text: ' kcal',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
                   ),
                 ],
               ),
             ),
-            
             SizedBox(height: 8),
-            
             Text(
               isUsingCustomGoal ? 'Custom goal' : 'Recommended goal',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: isUsingCustomGoal ? Colors.blue[600] : Colors.green[600],
-                fontWeight: FontWeight.w500,
-              ),
+                    color:
+                        isUsingCustomGoal ? Colors.blue[600] : Colors.green[600],
+                    fontWeight: FontWeight.w500,
+                  ),
             ),
-            
             if (isUsingCustomGoal) ...[
               SizedBox(height: 4),
               Text(
                 'Recommended: $recommendedCalories kcal',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                      color: Colors.grey[600],
+                    ),
               ),
             ],
           ],
@@ -375,15 +395,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Text(
               'Personal Information',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             SizedBox(height: 16),
-            
-            _buildInfoRow('Height', '${userProfile!.height.toStringAsFixed(0)} cm', Icons.height),
-            _buildInfoRow('Weight', '${userProfile!.weight.toStringAsFixed(1)} kg', Icons.monitor_weight),
-            _buildInfoRow('Activity Level', UserService.getActivityLevelDescription(userProfile!.activityLevel), Icons.directions_run),
-            _buildInfoRow('Goal', UserService.getGoalDescription(userProfile!.goal), Icons.flag),
+            _buildInfoRow('Height', '${userProfile!.height.toStringAsFixed(0)} cm',
+                Icons.height),
+            _buildInfoRow('Weight',
+                '${userProfile!.weight.toStringAsFixed(1)} kg', Icons.monitor_weight),
+            _buildInfoRow(
+                'Activity Level',
+                UserService.getActivityLevelDescription(
+                    userProfile!.activityLevel),
+                Icons.directions_run),
+            _buildInfoRow(
+                'Goal', UserService.getGoalDescription(userProfile!.goal), Icons.flag),
           ],
         ),
       ),
@@ -404,15 +430,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text(
                   label,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
                 ),
                 Text(
                   value,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
               ],
             ),
@@ -458,7 +484,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.track_changes, color: Theme.of(context).primaryColor),
+                Icon(Icons.track_changes,
+                    color: Theme.of(context).primaryColor),
                 SizedBox(width: 8),
                 Text(
                   'Custom Calorie Goal',
@@ -491,55 +518,68 @@ class _ProfileScreenState extends State<ProfileScreen> {
         builder: (context) => ProfileSetupScreen(existingProfile: userProfile),
       ),
     );
-    
+
     if (result == true) {
       _loadUserData();
     }
   }
 
   void _showCustomGoalDialog() {
-  String customGoal = '';
+    final _customGoalController = TextEditingController(
+      text: userProfile?.customCalorieGoal?.toString() ?? '',
+    );
 
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text('Custom Calorie Goal'),
-      content: TextField(
-        onChanged: (value) {
-          customGoal = value;
-        },
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(
-          hintText: 'Enter custom goal (kcal)',
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Custom Calorie Goal'),
+        content: TextField(
+          controller: _customGoalController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            hintText: 'Enter custom goal (kcal)',
+          ),
         ),
-      ),
-      actions: [
-        ElevatedButton(
-          onPressed: () {
-            if (customGoal.isNotEmpty) {
-              final parsedGoal = int.tryParse(customGoal);
-              if (parsedGoal != null && parsedGoal > 0) {
-                // TODO: save the custom goal value
-                print('Saving custom goal: $parsedGoal');
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await UserService.updateCalorieGoal(null);
+              Navigator.pop(context);
+              _loadUserData(); // Refresh the profile screen
+            },
+            child: Text('Clear'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final customGoal = _customGoalController.text;
+              if (customGoal.isNotEmpty) {
+                final parsedGoal = int.tryParse(customGoal);
+                if (parsedGoal != null && parsedGoal > 0) {
+                  await UserService.updateCalorieGoal(parsedGoal);
+                  Navigator.pop(context);
+                  _loadUserData(); // Refresh the profile screen
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Please enter a valid number')),
+                  );
+                }
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Please enter a valid number')),
-                );
-                return;
+                // If the field is empty, clear the custom goal
+                await UserService.updateCalorieGoal(null);
+                Navigator.pop(context);
+                _loadUserData();
               }
-            }
-            Navigator.pop(context);
-          },
-          child: Text('Save'),
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: Text('Cancel'),
-        ),
-      ],
-    ),
-  );
-}
+            },
+            child: Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
 }

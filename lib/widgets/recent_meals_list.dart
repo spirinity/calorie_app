@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import '../models/food_entry.dart';
+import '../screens/food_details_screen.dart';
 
 class RecentMealsList extends StatelessWidget {
   final List<FoodEntry> entries;
+  final VoidCallback onRefresh;
 
   const RecentMealsList({
     Key? key,
     required this.entries,
+    required this.onRefresh, 
   }) : super(key: key);
 
   @override
@@ -19,10 +22,22 @@ class RecentMealsList extends StatelessWidget {
   Widget _buildMealCard(BuildContext context, FoodEntry entry) {
     return Card(
       margin: EdgeInsets.only(bottom: 8),
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Row(
-          children: [
+        child: InkWell( // Wrap with InkWell for tap functionality
+        onTap: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => FoodDetailsScreen(entry: entry),
+            ),
+          );
+          if (result == true) {
+            onRefresh();
+          }
+        },
+       child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Row(
+            children: [
             // Food image or placeholder
             Container(
               width: 60,
@@ -96,7 +111,8 @@ class RecentMealsList extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ),
+   );
   }
 
   String _formatTime(DateTime dateTime) {

@@ -1,18 +1,13 @@
 import '../models/user_profile.dart';
+import 'database_helper.dart';
 
 class UserService {
-  static UserProfile? _userProfile;
-
   static Future<UserProfile?> getUserProfile() async {
-    // Simulate async operation
-    await Future.delayed(Duration(milliseconds: 100));
-    return _userProfile;
+    return await DatabaseHelper.instance.getUserProfile();
   }
 
   static Future<void> saveUserProfile(UserProfile profile) async {
-    // Simulate async operation
-    await Future.delayed(Duration(milliseconds: 100));
-    _userProfile = profile;
+    await DatabaseHelper.instance.saveUserProfile(profile);
   }
 
   static Future<bool> hasUserProfile() async {
@@ -29,8 +24,10 @@ class UserService {
   }
 
   static Future<void> updateCalorieGoal(int? customGoal) async {
-    if (_userProfile != null) {
-      _userProfile = _userProfile!.copyWith(customCalorieGoal: customGoal);
+    final profile = await getUserProfile();
+    if (profile != null) {
+      final updatedProfile = profile.copyWith(customCalorieGoal: customGoal);
+      await saveUserProfile(updatedProfile);
     }
   }
 

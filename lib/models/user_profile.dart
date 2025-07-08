@@ -7,6 +7,7 @@ class UserProfile {
   final String activityLevel; // 'sedentary', 'light', 'moderate', 'active', 'very_active'
   final String goal; // 'lose_weight', 'maintain', 'gain_weight'
   final int? customCalorieGoal;
+  final String? profileImagePath;
 
   UserProfile({
     required this.name,
@@ -17,6 +18,7 @@ class UserProfile {
     required this.activityLevel,
     required this.goal,
     this.customCalorieGoal,
+    this.profileImagePath,
   });
 
   // Calculate BMR using Mifflin-St Jeor Equation
@@ -98,6 +100,7 @@ class UserProfile {
       'activityLevel': activityLevel,
       'goal': goal,
       'customCalorieGoal': customCalorieGoal,
+      'profileImagePath': profileImagePath,
     };
   }
 
@@ -111,6 +114,7 @@ class UserProfile {
       activityLevel: json['activityLevel'] ?? 'moderate',
       goal: json['goal'] ?? 'maintain',
       customCalorieGoal: json['customCalorieGoal'],
+      profileImagePath: json['profileImagePath'],
     );
   }
 
@@ -123,6 +127,7 @@ class UserProfile {
     String? activityLevel,
     String? goal,
     int? customCalorieGoal,
+    String? profileImagePath,
   }) {
     return UserProfile(
       name: name ?? this.name,
@@ -133,6 +138,7 @@ class UserProfile {
       activityLevel: activityLevel ?? this.activityLevel,
       goal: goal ?? this.goal,
       customCalorieGoal: customCalorieGoal,
+      profileImagePath: profileImagePath ?? this.profileImagePath,
     );
   }
 }

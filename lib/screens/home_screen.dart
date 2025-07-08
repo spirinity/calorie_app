@@ -337,7 +337,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                       SizedBox(height: 12),
-                      RecentMealsList(entries: todayEntries),
+                      RecentMealsList(
+                      entries: todayEntries,
+                      onRefresh: _loadData, // Pass the callback here
+                  ),
                     ] else ...[
                       _buildEmptyState(),
                     ],

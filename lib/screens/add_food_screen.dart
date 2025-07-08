@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart'; // Import the package
 import '../models/food_entry.dart';
 import '../services/food_service.dart';
 
@@ -12,16 +13,16 @@ class AddFoodScreen extends StatefulWidget {
   _AddFoodScreenState createState() => _AddFoodScreenState();
 }
 
-
 class _AddFoodScreenState extends State<AddFoodScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _quantityController = TextEditingController();
   final _caloriesController = TextEditingController();
-  
+
   String _selectedQuantityUnit = 'grams';
   File? _selectedImage;
   bool _isSaving = false;
+  final ImagePicker _picker = ImagePicker(); // Create an instance of ImagePicker
 
   final List<String> _quantityUnits = [
     'grams',
@@ -42,22 +43,14 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    // For demo purposes, we'll just show a dialog
-    // In a real app, you would implement image_picker functionality
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Image Selection'),
-        content: Text('Image picker functionality would be implemented here with the image_picker package.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('OK'),
-          ),
-        ],
-      ),
-    );
+  Future<void> _pickImage(ImageSource source) async {
+    final pickedFile = await _picker.pickImage(source: source);
+
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImage = File(pickedFile.path);
+      });
+    }
   }
 
   void _showImageSourceDialog() {
@@ -93,7 +86,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
                   label: 'Camera',
                   onTap: () {
                     Navigator.pop(context);
-                    _pickImage();
+                    _pickImage(ImageSource.camera);
                   },
                 ),
                 _buildImageSourceButton(
@@ -101,7 +94,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
                   label: 'Gallery',
                   onTap: () {
                     Navigator.pop(context);
-                    _pickImage();
+                    _pickImage(ImageSource.gallery);
                   },
                 ),
               ],
@@ -168,10 +161,9 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
       await FoodService.saveFoodEntry(entry);
 
       _showSuccessSnackBar('Food entry saved successfully!');
-      
-      // Return to home screen with success result
+
       Navigator.pop(context, true);
-      
+
     } catch (e) {
       _showErrorSnackBar('Error saving food entry: ${e.toString()}');
     } finally {
